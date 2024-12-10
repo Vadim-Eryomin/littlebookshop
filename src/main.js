@@ -147,7 +147,6 @@ function hbox() {
 
             let children = this.getChildren().filter(e => !e.is("dragging"))
             let offset = this.width / (children.length + 3)
-
             for (let i = 0; i < children.length; i++) {
                 let c = children[i];
                 c.pos.y = this.pos.y + this.height / 2
@@ -250,6 +249,181 @@ scene("menu", async () => {
         anchor("center"),
         color(0, 0, 0),
     ])
+})
+
+scene("level_01", async () => {
+    add([
+        sprite("city", {width: width(), height: height()})
+    ])
+
+
+    function house(say, right, spriteName, posArr) {
+        let a = add([
+            sprite(spriteName, {width: 200}),
+            anchor("center"),
+            pos(posArr[0], posArr[1]),
+            area()
+        ])
+
+        a.onClick(async () => {
+            if (talking) return
+            if (a.is("disabled")) return;
+
+            a.use("disabled")
+            a.use(color(50, 50, 50))
+            talking = true
+            await sayText(say, "aunt")
+            talking = false
+            if (right) {
+                a.trigger("right")
+            }
+        })
+        return a
+    }
+
+    house("Я думаю, парикмахерская не лучший вариант. Тебе нужны первичные навыки, поскольку работников сразу не наймешь. Давай попробуем другой вариант", false, "hair", [center().x - 150, center().y - 150])
+    house("Кафе звучит здорово, но подумай, сколько мороки: чистота кухни, санитарные книжки - жуть. Давай попробуем другой вариант", false, "cafe", [center().x - 150, center().y + 150])
+    house("Ты можешь заработать много с брендовой одежды, но не здесь, дорогой", false, "dress", [center().x + 150, center().y - 150])
+    let bookshop = house("Книжный магазин? Хорошая идея: просто, прибыльно и интересно, а самое главное - ты можешь передать свою любовь к чтению другим!", true, "book", [center().x + 150, center().y + 150])
+    bookshop.on("right", async () => {
+        await sayText("Уфф, я лучше сделаю кафе, их тут много, значит прибыльно", "friend")
+        await goWithFade("level_02")
+    })
+
+    talking = true
+    await sayText("Для начала выберем индустрию, в которой откроем свое\nдело!", "aunt")
+    talking = false
+})
+
+scene("level_02", async () => {
+    let bg = add([
+        sprite("shop-empty", {width: width(), height: height()})
+    ])
+
+
+    let mainPile = add([
+        rect(600, 250),
+        area(),
+        color(40, 80, 80),
+        pos(center().x - 300, 100),
+        pile(() => true),
+        hbox(),
+        pileCounter("money", "Запасы: ")
+    ])
+
+    let aPile = add([
+        rect(300, 200),
+        area(),
+        color(40, 80, 80),
+        pos(center().x - 150 - 300 - 70, 450),
+        pile(() => true),
+        hbox(),
+        pileCounter("money", "Помещение: ")
+    ])
+
+    let bPile = add([
+        rect(300, 200),
+        area(),
+        color(40, 80, 80),
+        pos(center().x - 150, 450),
+        pile(() => true),
+        hbox(),
+        pileCounter("money", "Книги: ")
+    ])
+
+    let cPile = add([
+        rect(300, 200),
+        area(),
+        color(40, 80, 80),
+        pos(center().x - 150 + 300 + 70, 450),
+        pile(() => true),
+        hbox(),
+        pileCounter("money", "Наём: ")
+    ])
+
+
+    function createMoney(spr, sum) {
+        currentPile = mainPile
+        let e = make([
+            sprite(spr, {width: 142}),
+            pos(50, 50),
+            area(),
+            drag(),
+            anchor("center"),
+            money(sum),
+            rotate(90)
+        ])
+        e.onDragEnd()
+
+        currentPile = null
+        return e
+    }
+
+    add(createMoney("200", 200000))
+    add(createMoney("50", 50000))
+
+    for (let i = 0; i < 11; i++)
+        add(createMoney("100", 100000))
+
+    for (let i = 0; i < 6; i++)
+        add(createMoney("25", 25000))
+
+
+    let checkButton = add([
+        pos(center().x, height() - 100),
+        sprite("button", {width: 250}),
+        anchor("center"),
+        area(),
+    ])
+    checkButton.add([
+        text("Проверить", {width: 250, align: "center"}),
+        anchor("center"),
+        color(0, 0, 0),
+    ])
+
+    checkButton.onClick(() => {
+        checkButton.trigger("check")
+    })
+
+
+    onMouseDown(() => {
+        get("drag").forEach(e => e.onDrag())
+    })
+
+    onMouseRelease(() => {
+        if (currentDragging)
+            currentDragging.onDragEnd()
+        currentDragging = null
+    })
+
+    checkButton.on("check", async () => {
+        talking = true;
+
+        if (mainPile.money() === 75000 && aPile.money() === 1050000 && bPile.money() === 225000 && cPile.money() === 150000) {
+            bg.sprite = "shop-full"
+            await sayText("Хмм... Выглдяит правильно! Так держать", "aunt")
+            await sayText("Да ну, все вложу в продукты и помещение, так быстрее окуплюсь", "friend")
+            await sayText("Ну-ну, посмотрим", "aunt")
+            goWithFade("level_03")
+        } else {
+            await sayText("Хмм... Кажется, ты где-то ошибся в расчетах", "aunt")
+            await sayText("Давай ещё раз: 70% на помещение, 15% на первые книги, 10% на наём сотрудников и 5% оставить на всякий случай", "aunt")
+        }
+
+        talking = false
+    })
+    talking = true
+    await sayText("Теперь давай перейдём к финансированию", "aunt")
+    await sayText("Ты ведь знаешь, насколько важно правильно распределить бюджет, чтобы твой бизнес имел хорошие шансы на успех?", "aunt")
+    await sayText("Да, я понимаю, что выбор распределения бюджета будет критически важен. Как мы распределим финансы?", "me")
+    await sayText("Хороший вопрос! Сначала давай подумаем о самой аренде. Я рекомендую выделить не более 70% на аренду.", "aunt")
+    await sayText("Это позволит тебе иметь финансовую подушку на случай непредвиденных расходов.", "aunt")
+    await sayText("Это звучит разумно. А сколько же нам выделить на товар и остальные нужды?", "me")
+    await sayText("Вот тут главная часть. Отведи 15% на товары, которые ты собираешься продавать, и 10% на наём.", "aunt")
+    await sayText("Это даст тебе возможность быстро адаптироваться, если что-то пойдёт не так.", "aunt")
+    await sayText("У меня есть 1,5 млн. рублей и мне нужно распределить эти финансы ...", "aunt")
+    talking = false
+
 })
 
 

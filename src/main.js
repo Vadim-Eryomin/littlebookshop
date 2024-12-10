@@ -427,4 +427,108 @@ scene("level_02", async () => {
 })
 
 
+
+scene("level_05", async () => {
+    let map = add([
+        sprite("big-city", {width: width(), height: height()})
+    ])
+
+    function createData(print, tag, description, position) {
+        let button = make([
+            sprite("button", {width: 200, height: 150}),
+            area(),
+            pos(position),
+            anchor("center"),
+            scale(0.7),
+            tag
+        ])
+
+        let txt = button.add([
+            text(print, {width: 140, align: "center", size: 22}),
+            anchor("center"),
+            color(0, 0, 0),
+            pos(0, -40)
+        ])
+
+        let desc = button.add([
+            text(description, {width: 175, align: "center", size: 16}),
+            anchor("center"),
+            color(0, 0, 0),
+            pos(0, 10)
+        ])
+
+        button.onClick(() => {
+            if (talking) return
+            if (button.is("disabled")) return
+
+            map.trigger(tag)
+        })
+
+        return button
+    }add(createData("Лыкино", "far", "В этой области нет книжных магазинов", vec2(250, 75)))
+    add(createData("Пуськино", "far", "В этой области нет книжных магазинов", vec2(800, 140)))
+    add(createData("Черепушкино", "more", "В этой области 5 книжных магазинов", vec2(600, 350)))
+    add(createData("Панки", "good", "В этой области 1 книжный магазин", vec2(650, 550)))
+    add(createData("Бубульки", "more", "В этой области 4 книжных магазина", vec2(260, 350)))
+    add(createData("Пасека", "more", "В этой области 8 книжных магазинов", vec2(500, 700)))
+    add(createData("Дублинки", "good", "В этой области нет книжных магазинов", vec2(200, 700)))
+    add(createData("Порт", "far", "В этой области нет книжных магазинов", vec2(900, 700)))
+    add(createData("Огарёво", "far", "В этой области нет книжных магазинов", vec2(width() - 100, 250)))
+
+
+    map.on("far", async () => {
+        get("far").forEach(e => {
+            e.use("disabled")
+            e.use(color(50, 50, 50))
+        })
+        talking = true
+        await sayText("Прекрасное место, но пока у тебя нет управляющего, будет сложно следить за столь отдаленным местом", "aunt")
+        talking = false
+    })
+
+    map.on("more", async () => {
+        get("more").forEach(e => {
+            e.use("disabled")
+            e.use(color(50, 50, 50))
+        })
+
+        talking = true
+        await sayText("Здесь уже очень много книжных магазинов, в том числе крупных брендов", "aunt")
+        await sayText("Конкуренция вряд ли пойдет нам на пользу первое время", "aunt")
+        talking = false
+    })
+
+    map.on("good", async () => {
+        talking = true
+        await sayText("Хм... Выглядит здорово!", "aunt")
+        await sayText("И конкуренции мало, и место недалеко", "aunt")
+        await sayText("Думаю это хороший выбор!", "aunt")
+        await sayText("Что вы делаете?", "friend")
+        await sayText("Ого, уже второй магазин???", "friend")
+        await sayText("Сомневаюсь, что сделаю так же: мое кафе работает только в убыток", "friend")
+        await sayText("Потому что нужно делать все по уму", "aunt")
+        talking = false
+
+        goWithFade("level_total")
+    })
+})
+
+scene("level_total", async () => {
+    add([
+        sprite("shop-full", {width: width(), height: height()})
+    ])
+
+    await sayText("Фух, ну и дел мы с тобой переделали", "aunt")
+    await sayText("Да, не думал, что бизнес открыть на самом деле просто", "me")
+    await sayText("Конечно просто, но только если знать все подводные камни!", "aunt")
+    await sayText("После такого мне нужно отдохнуть", "aunt")
+    await sayText("Я на Бали, как твой бизнес наладится и пойдут хорошие деньги - прилетай ко мне!", "aunt")
+    await sayText("Только не забывай про зарплаты, налоги и управляющего", "aunt")
+    await sayText("Хорошо тётя Мэри, я все сделаю как нужно!", "me")
+    await sayText("Благодаря тебе, я умею вести бизнес!", "me")
+    await sayText("Эм... Возьмешь меня на работу?", "friend")
+    await sayText("Я подумаю", "me")
+    goWithFade("menu")
+})
+
 goWithFade("menu")
